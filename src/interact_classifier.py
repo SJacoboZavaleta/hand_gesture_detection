@@ -17,10 +17,12 @@ import pickle
 import cv2
 import mediapipe as mp
 import numpy as np
+from pathlib import Path
 
 # === INICIALIZACIÓN ===
 # Carga del modelo pre-entrenado
-model_dict = pickle.load(open('../model.p', 'rb'))
+with open(Path(__file__).parent / 'model.p', 'rb') as f:
+    model_dict = pickle.load(f)
 model = model_dict['model']
 
 # Configuración de la captura de video

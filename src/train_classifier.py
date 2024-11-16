@@ -19,11 +19,13 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import numpy as np
+from pathlib import Path
 
 # === CARGA Y PREPARACIÓN DE DATOS ===
 try:
     # Cargar datos preprocesados
-    data_dict = pickle.load(open('../data.pickle', 'rb'))
+    with open(Path(__file__).parent / 'data.pickle', 'rb') as f:
+        data_dict = pickle.load(f)
     
     # Convertir a arrays numpy para mejor rendimiento
     data = np.asarray(data_dict['data'])     # Matriz de features (42 coordenadas normalizadas por muestra)
@@ -62,9 +64,10 @@ try:
 
     # === GUARDADO DEL MODELO ===
     print("Guardando modelo entrenado...")
-    with open('../model.p', 'wb') as f:
+    model_path = Path(__file__).parent / 'model.p'
+    with open(model_path, 'wb') as f:
         pickle.dump({'model': model}, f)
-    
+
     print("Entrenamiento completado exitosamente!")
 
 except FileNotFoundError:

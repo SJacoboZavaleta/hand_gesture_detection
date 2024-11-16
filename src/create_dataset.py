@@ -3,6 +3,7 @@ import pickle
 import mediapipe as mp
 import cv2
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 # Inicialización de MediaPipe para detección de manos
 mp_hands = mp.solutions.hands
@@ -15,7 +16,7 @@ mp_drawing_styles = mp.solutions.drawing_styles
 hands = mp_hands.Hands(static_image_mode=True, min_detection_confidence=0.3)
 
 # Directorio donde se encuentran las imágenes organizadas por carpetas (cada carpeta es una clase/gesto)
-DATA_DIR = '../data'
+DATA_DIR = str(Path(__file__).parent.parent / 'data')
 
 # Listas para almacenar los datos procesados y sus etiquetas
 data = []      # Almacenará las coordenadas normalizadas de los puntos de la mano
@@ -61,6 +62,6 @@ for dir_ in os.listdir(DATA_DIR):
 
 # Guardar los datos procesados en un archivo pickle
 # El formato es un diccionario con 'data' y 'labels' como claves
-f = open('data.pickle', 'wb')
-pickle.dump({'data': data, 'labels': labels}, f)
-f.close()
+data_path = Path(__file__).parent / 'data.pickle'
+with open(data_path, 'wb') as f:
+    pickle.dump({'data': data, 'labels': labels}, f)
