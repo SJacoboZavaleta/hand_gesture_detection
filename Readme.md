@@ -79,8 +79,8 @@ proyecto/
 │   ├── create_dataset.py      # Script para procesar imágenes y crear dataset
 │   ├── interact_classifier.py  # Script para clasificación en tiempo real
 │   ├── train_classifier.py    # Script para entrenar el modelo
+│   ├── model.p                 # Modelo entrenado
 │   └── data.pickle           # Dataset procesado
-├── model.p                    # Modelo entrenado
 ├── .gitignore                # Configuración de Git
 ├── README.md                 # Documentación del proyecto
 └── requirements.txt          # Dependencias del proyecto
