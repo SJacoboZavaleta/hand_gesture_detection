@@ -66,12 +66,31 @@ python src/interact_classifier.py
 ```bash
 python src/collect_images.py
 ```
+## Project structure
+
+```bash
+proyecto/
+├── data/
+│   ├── 0/          # Imágenes del gesto A
+│   ├── 1/          # Imágenes del gesto B
+│   └── 2/          # Imágenes del gesto L
+├── src/
+│   ├── collect_images.py      # Script para capturar imágenes
+│   ├── create_dataset.py      # Script para procesar imágenes y crear dataset
+│   ├── interact_classifier.py  # Script para clasificación en tiempo real
+│   ├── train_classifier.py    # Script para entrenar el modelo
+│   └── data.pickle           # Dataset procesado
+├── model.p                    # Modelo entrenado
+├── .gitignore                # Configuración de Git
+├── README.md                 # Documentación del proyecto
+└── requirements.txt          # Dependencias del proyecto
+```
 
 ## Team members
 
 - [Doro]()
 - [Fergus]()
-- [Nataloa]()
+- [Natalia]()
 - [Sergio]()
 
 
