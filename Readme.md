@@ -1,12 +1,5 @@
 # Hand Gesture Recognition
 
-## Team members
-
-- [Doro]()
-- [Fergus]()
-- [Nataloa]()
-- [Sergio]()
-
 ## Project Description
 
 This project is a hand gesture recognition system that uses a webcam to capture video input and a ML-based model to recognize the hand gestures. The system can be used for various applications such as sign language recognition, gesture-based control, and more. The project is built using Python and the libraries such as Pytorch, OpenCV, Scikit-learn and mediapipe. The project is part of the course *"Computer Vision"* at the Carlos III University of Madrid. 
@@ -23,6 +16,36 @@ The project is structured as follows:
 
 1. Install the dependencies using the following command:
 
+### Opción 1: Usando venv (Python Virtual Environment)
+
+1. Crear y activar el entorno virtual:
+```bash
+# En Windows
+python -m venv venv
+.\venv\Scripts\activate
+
+# En Linux/Mac
+python3 -m venv venv
+source venv/bin/activate
+```
+
+2. Instalar las dependencias:
+```bash
+pip install -r requirements.txt
+```
+
+### Opción 2: Usando Miniconda
+
+1. Crear y activar el entorno conda:
+```bash
+# Crear el entorno
+conda create -n gesture_env python=3.9
+
+# Activar el entorno
+conda activate gesture_env
+```
+
+2. Instalar las dependencias:
 ```bash
 pip install -r requirements.txt
 ```
@@ -44,7 +67,11 @@ python src/interact_classifier.py
 python src/collect_images.py
 ```
 
+## Team members
 
-
+- [Doro]()
+- [Fergus]()
+- [Nataloa]()
+- [Sergio]()
 
 

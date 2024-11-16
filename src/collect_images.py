@@ -5,6 +5,7 @@ import time
 #pip install opencv-python
 
 # Configuración del directorio de datos
+# Usando rutas relativas
 DATA_DIR = './data'
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
