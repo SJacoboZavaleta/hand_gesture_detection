@@ -1,0 +1,33 @@
+# Archivos de caché de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos del editor Cursor
+.cursor/
+.cursor-cache/
+.history/
+
+# Archivos de VS Code (que Cursor usa como base)
+.vscode/
+*.code-workspace
+.settings/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de distribución y build
+dist/
+build/
+*.egg-info/
+
+# Archivos de logs
+*.log
+
+# Archivos temporales
+tmp/
+temp/
+
+# Carpetas de modelos o datasets (personalizar según necesidades)
+backup/
