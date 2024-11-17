@@ -31,3 +31,8 @@ temp/
 
 # Carpetas de modelos o datasets (personalizar según necesidades)
 backup/
+# Pero mantener las carpetas
+!src/google_colab/data/doro/.gitkeep
+!src/google_colab/data/fergus/.gitkeep
+!src/google_colab/data/natalia/.gitkeep
+!src/google_colab/data/sergio/.gitkeep
