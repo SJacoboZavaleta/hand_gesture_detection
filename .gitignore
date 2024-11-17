@@ -36,3 +36,7 @@ backup/
 !src/google_colab/data/fergus/.gitkeep
 !src/google_colab/data/natalia/.gitkeep
 !src/google_colab/data/sergio/.gitkeep
+
+# Ignorar archivos generados por Quarto en la carpeta document
+complementary/document/setup_google_colab_files/
+complementary/document/*.html

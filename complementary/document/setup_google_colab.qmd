@@ -1,0 +1,106 @@
+---
+title: "Guía de Configuración: Recolección de Datos en Google Colab"
+subtitle: "Proyecto de Detección de Gestos de Mano"
+date: today
+format:
+  pdf:
+    documentclass: article
+    papersize: letter
+    toc: true
+    number-sections: true
+    colorlinks: true
+execute:
+  echo: true
+  eval: false
+---
+
+# Configuración Inicial
+
+## Prerrequisitos
+Antes de comenzar, asegúrate de tener:
+
+1. Una cuenta de Google
+2. Acceso a Google Drive
+3. Acceso a Google Colab
+
+## Estructura del Proyecto
+El proyecto está organizado de la siguiente manera:
+
+```bash
+tu_carpeta_personal/
+├── google_colab/
+│   ├── data/
+│   │   ├── doro/
+│   │   ├── fergus/
+│   │   ├── natalia/
+│   │   └── sergio/
+│   └── src/
+│       ├── collect_images_doro.ipynb
+│       ├── collect_images_fergus.ipynb
+│       ├── collect_images_natalia.ipynb
+│       └── collect_images_sergio.ipynb
+```
+
+# Pasos de Configuración
+
+## 1. Preparar Google Drive
+1. Abre [Google Drive](https://drive.google.com)
+2. Crea una nueva carpeta para el proyecto (ejemplo: "ProyectoGestos")
+3. Anota la ruta completa de esta carpeta, la necesitarás más adelante
+
+## 2. Configurar el Entorno
+1. Abre [Google Colab](https://colab.research.google.com)
+2. Descarga y abre el notebook `clone_gc_repo.ipynb`
+3. Conecta el notebook a Google Drive:
+   - Haz clic en "Montar Drive" cuando se te solicite
+   - Autoriza el acceso cuando se te pida
+
+## 3. Configurar la Carpeta de Trabajo
+En el notebook `clone_gc_repo.ipynb`, modifica la variable `DESTINO_DRIVE` con la ruta de tu carpeta:
+
+```{python}
+#| echo: true
+#| eval: false
+# Ejemplo: Si creaste la carpeta "ProyectoGestos"
+DESTINO_DRIVE = '/content/drive/MyDrive/ProyectoGestos'
+!mkdir -p "{DESTINO_DRIVE}"
+```
+
+## 4. Recolección de Datos
+1. Navega a la carpeta `src` en tu Google Drive
+2. Abre el notebook correspondiente a tu nombre (ejemplo: `collect_images_sergio.ipynb`)
+3. Actualiza la variable de entorno en el notebook:
+
+```{python}
+#| echo: true
+#| eval: false
+# Usa la misma ruta que definiste en DESTINO_DRIVE
+YOUR_LOCAL_FOLDER = '/content/drive/MyDrive/ProyectoGestos'
+subrepo_name = 'google_colab'
+project_path = os.path.join(YOUR_LOCAL_FOLDER, subrepo_name)
+
+# Establecer carpeta de trabajo
+os.chdir(project_path)
+```
+
+# Verificación de la Instalación
+
+Para confirmar que todo está correctamente configurado:
+
+1. Revisa que la estructura de carpetas coincida con la mostrada anteriormente
+2. Verifica que puedas acceder a tu notebook personal en la carpeta `src`
+3. Confirma que la carpeta `data` con tu nombre existe
+
+# Solución de Problemas Comunes
+
+- **Error de permisos en Drive**: Asegúrate de haber montado Drive correctamente
+- **Carpetas no visibles**: Actualiza la página de Google Drive
+- **Error en la ruta**: Verifica que las rutas coincidan exactamente con tu estructura en Drive
+
+# Siguientes Pasos
+
+Una vez completada la configuración, puedes proceder a:
+
+1. Ejecutar tu notebook personal
+2. Comenzar la recolección de imágenes
+3. Verificar que las imágenes se guarden correctamente en tu carpeta dentro de `data/`
