@@ -15,7 +15,7 @@ model = models.mobilenet_v2(pretrained=False)
 model.classifier[1] = torch.nn.Linear(model.classifier[1].in_features, 29)
 
 # Load the saved model weights
-model.load_state_dict(torch.load('./src/mobilenet_CNN/mobilenet_asl_100_percent_5_epoch.pth'))
+model.load_state_dict(torch.load('./src/mobilenet_CNN/networks/mobilenet_sign_w_user_data_10_ep.pth'))
 
 # Set the model to evaluation mode for inference
 model.eval()
