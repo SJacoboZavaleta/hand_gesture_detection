@@ -197,7 +197,7 @@ class HandGestureRecognizer:
                 raise ValueError(f"Tipo de modelo no soportado: {self.model_type}")
             
             # Load the saved model weights
-            checkpoint = torch.load(model_path, map_location=self.device)
+            checkpoint = torch.load(model_path, map_location=self.device, weights_only=True)
             if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
                 model.load_state_dict(checkpoint['model_state_dict'])
             elif isinstance(checkpoint, dict):
@@ -318,16 +318,14 @@ def main():
         print("Error: Could not open camera")
         return
 
-    # class_lookup = {
-    #     0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E',
-    #     5: 'F', 6: 'G', 7: 'H', 8: 'I', 9: 'J',
-    #     10: 'K', 11: 'L', 12: 'M', 13: 'N', 14: 'O',
-    #     15: 'P', 16: 'Q', 17: 'R', 18: 'S', 19: 'T',
-    #     20: 'U', 21: 'V', 22: 'W', 23: 'X', 24: 'Y',
-    #     25: 'Z', 26: 'del', 27: 'nothing', 28: 'space'
-    # }
+    # Load the appropriate class lookup based on model type
+    if args.model_type == 'efficientnet':
+        class_lookup_path = 'data/classs_lookup_v2.json' #original mapping
+    else:
+        class_lookup_path = 'data/class_lookup.json'
+    
     # Load class lookup dictionary from JSON file
-    with open(Path(__file__).parent.parent / 'data' / 'class_lookup.json', 'r') as f:
+    with open(class_lookup_path, 'r') as f:
         class_lookup = {int(k): v.upper() for k, v in json.load(f).items()}
 
     # Initialize recognizer
