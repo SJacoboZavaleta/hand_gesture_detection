@@ -21,12 +21,12 @@ from pathlib import Path
 
 # === CONFIGURACIÓN INICIAL ===
 # Directorio para almacenar las imágenes
-DATA_DIR = str(Path(__file__).parent.parent / 'data')
+DATA_DIR = str(Path(__file__).parent.parent / 'data' / 'new_webcam_data')
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
 # Parámetros de configuración
-number_of_classes = 3        # Número de gestos diferentes a capturar
+number_of_classes = 29        # Número de gestos diferentes a capturar
 dataset_size = 100          # Cantidad de imágenes por gesto
 capture_interval = 0.1      # Tiempo entre capturas (segundos)
 

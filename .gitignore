@@ -31,6 +31,14 @@ temp/
 
 # Carpetas de modelos o datasets (personalizar según necesidades)
 backup/
+data/ASL
+data/unified_data
+data/webcam_data
+
+# Generado por Quarto preview
+Readme.html
+Readme_files/ 
+
 # Pero mantener las carpetas
 !src/google_colab/data/doro/.gitkeep
 !src/google_colab/data/fergus/.gitkeep

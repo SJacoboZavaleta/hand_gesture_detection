@@ -1,96 +1,210 @@
-# Hand Gesture Recognition
+# Real-Time Hand Gesture Recognition System
 
-## Project Description
+## Overview
 
-This project is a hand gesture recognition system that uses a webcam to capture video input and a ML-based model to recognize the hand gestures. The system can be used for various applications such as sign language recognition, gesture-based control, and more. The project is built using Python and the libraries such as Pytorch, OpenCV, Scikit-learn and mediapipe. The project is part of the course *"Computer Vision"* at the Carlos III University of Madrid. 
+A comprehensive computer vision system for real-time hand gesture recognition, developed as part of the Computer Vision course at Universidad Carlos III de Madrid. This project implements multiple machine learning approaches, including Random Forest for landmark-based classification and EfficientNet for deep learning-based image classification, to achieve robust hand gesture recognition through webcam input.
 
-## Project Structure
+## Key Features
 
-The project is structured as follows:
+- **Multi-Model Architecture**: Implements both traditional ML (Random Forest) and deep learning (EfficientNet) approaches
+- **Real-Time Processing**: Provides immediate gesture recognition through webcam feed
+- **Extensible Framework**: Supports easy integration of new gestures and model architectures
+- **Comprehensive Evaluation**: Includes detailed performance metrics and visualizations
+- **Interactive Interface**: Real-time visualization of gesture recognition results
 
-- `src/`: Source code for the project.
-- `data/`: Data for the project.
-- `Readme.md`: This readme file.
+## Technical Architecture
+
+The system comprises three main components:
+1. **Data Processing Pipeline**: 
+   - Hand landmark extraction using MediaPipe
+   - Image preprocessing and augmentation
+   - Dataset creation and management
+
+2. **Model Implementation**:
+   - Random Forest classifier using landmark features
+   - EfficientNet with transfer learning and fine-tuning
+   - Model evaluation and performance analysis
+
+3. **Interactive Interface**:
+   - Real-time webcam integration
+   - Visual feedback system
+   - Performance metrics display
 
 ## Installation
 
-1. Install the dependencies using the following command:
+### Option 1: Using Python Virtual Environment (venv)
 
-### Opción 1: Usando venv (Python Virtual Environment)
-
-1. Crear y activar el entorno virtual:
 ```bash
-# En Windows
-python -m venv venv
-.\venv\Scripts\activate
+# Windows
+python -m venv hand_gesture_env
+.\hand_gesture_env\Scripts\activate
 
-# En Linux/Mac
-python3 -m venv venv
-source venv/bin/activate
-```
+# Linux/macOS
+python3 -m venv hand_gesture_env
+source hand_gesture_env/bin/activate
 
-2. Instalar las dependencias:
-```bash
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### Opción 2: Usando Miniconda
-
-1. Crear y activar el entorno conda:
-```bash
-# Crear el entorno
-conda create -n gesture_env python=3.9
-
-# Activar el entorno
-conda activate gesture_env
-```
-
-2. Instalar las dependencias:
-```bash
-pip install -r requirements.txt
-```
-
-2. Run the following command to train the model:
+### Option 2: Using Conda Environment
 
 ```bash
-python src/train_classifier1.py
+# Create and configure environment
+conda env create -f environment.yml -n hand_gesture_env
+
+# Activate environment
+conda activate hand_gesture_env
 ```
 
-3. Run the following command to interact with the classifier:
+> **Note**: The environment name can be customized by modifying the `name` parameter in `environment.yml`.
 
+## Usage
+
+### Real-Time Classification
+
+1. **Random Forest Model (Webcam-Collected Dataset)**
 ```bash
-python src/interact_classifier.py
+python src/interact_classifier.py --model_type ml --model_path results/randomforest_data1/evaluation_20241130_132749/checkpoints/random_forest_model.pkl
 ```
-4. Run the following command to collect new images and train the model:
 
+2. **EfficientNet Model (ASL Dataset)**
+```bash
+python src/interact_classifier.py --model_type efficientnet --model_path results/efficientnet_v2_s_data2/evaluation_20241129_222629/checkpoints/Fine_Tuning_best_model.pth
+```
+
+3. **EfficientNet Model (Unified Dataset)**
+```bash
+python src/interact_classifier.py --model_type efficientnet --model_path results/efficientnet_v2_s_data3/evaluation_20241129_153938/checkpoints/Fine_Tuning_best_model.pth
+```
+
+### Training Pipeline
+
+#### Random Forest Model
+1. **Dataset Creation**
+```bash
+python src/randomForest/create_dataset.py
+```
+This processes images from `data/webcam_data` and generates `unified_webcam_dataset.pickle`.
+
+2. **Model Training**
+```bash
+python src/randomForest/train_classifier.py
+```
+Generates model artifacts and evaluation metrics in `results/randomforest_data1/evaluation_YYMMDD_HHMMSS/`.
+
+#### EfficientNet Models
+
+1. **Configuration**
+   - Open `src/efficientNet/efficientnet_transferlearning_finetunning.py`
+   - Set `DATA_TYPE = "data2"` or `"data3"` as needed
+
+2. **Training**
+```bash
+python src/efficientNet/efficientnet_transferlearning_finetunning.py
+```
+
+> **Note**: An interactive Jupyter notebook version is available at `src/efficientNet/efficientnet_transferlearning_finetunning.ipynb`.
+
+### Data Collection
+
+To collect new training data:
+
+1. Configure data directory in `src/collect_images.py`:
+```python
+DATA_DIR = str(Path(__file__).parent.parent / 'data' / 'new_webcam_data')
+```
+
+2. Run collection script:
 ```bash
 python src/collect_images.py
 ```
-## Project structure
+
+
+## Project Structure
 
 ```bash
-proyecto/
-├── data/
-│   ├── 0/          # Imágenes del gesto A
-│   ├── 1/          # Imágenes del gesto B
-│   └── 2/          # Imágenes del gesto L
-├── src/
-│   ├── collect_images.py      # Script para capturar imágenes
-│   ├── create_dataset.py      # Script para procesar imágenes y crear dataset
-│   ├── interact_classifier.py  # Script para clasificación en tiempo real
-│   ├── train_classifier.py    # Script para entrenar el modelo
-│   ├── model.p                 # Modelo entrenado
-│   └── data.pickle           # Dataset procesado
-├── .gitignore                # Configuración de Git
-├── README.md                 # Documentación del proyecto
-└── requirements.txt          # Dependencias del proyecto
+hand_gesture_detection/              # Hand Gesture Recognition Project Root
+├── complementary/                   # Additional project resources and documentation
+│   └── document/                   # Project documentation and research papers
+│   └── clone_gc_repo.ipynb         # Notebook for cloning Google Colab repository
+├── data/                           # Dataset storage and organization
+│   ├── ASL/                       # American Sign Language dataset from Kaggle
+│   │   ├───asl_alphabet_test      # Test set for ASL images
+│   │   └───asl_alphabet_train     # Training set for ASL images
+│   ├── unified_data/              # Combined and preprocessed dataset
+│   │   └───unified_data           # Standardized image data for all gestures
+│   ├── webcam_data/               # Custom dataset from webcam captures
+│   │   ├───test                   # Test set from webcam data
+│   │   └───unified_data           # Processed webcam images
+│   └── class_lookup.json          # Mapping between gesture labels and numeric classes
+├── results/                        # Training results and model evaluations
+│   ├── efficientnet_v2_s_data2/   # EfficientNet results using ASL dataset
+│   │   └── evaluation_20241129_222629/
+│   │       ├── checkpoints/       # Model weight snapshots
+│   │       │   ├── Fine_Tuning_best_model.pth      # Best model after fine-tuning
+│   │       │   └── Transfer_Learning_best_model.pth # Best model after transfer learning
+│   │       ├── evaluation/        # Performance evaluation results
+│   │       │   ├── classification_metrics.csv       # Per-class performance metrics
+│   │       │   ├── confusion_matrix.png            # Class prediction analysis
+│   │       │   ├── training_history.json           # Training metrics over time
+│   │       │   └── training_history.png            # Training progress visualization
+│   │       └── model_architecture/                 # Network architecture details
+│   │           ├── model_architecture_simplified.pdf  # PDF visualization
+│   │           ├── model_architecture_simplified.png  # PNG visualization
+│   │           └── model_summary_simplified.txt      # Layer-by-layer description
+│   └── randomforest_data1/        # Random Forest model results
+│       └── evaluation_20241130_132749/
+│           ├── checkpoints/
+│           │   └── random_forest_model.pkl         # Trained Random Forest model
+│           └── evaluation/
+│               ├── confusion_matrix.png            # Classification results matrix
+│               ├── cross_validation_metrics.json   # K-fold validation results
+│               ├── detailed_metrics.json           # Comprehensive metrics
+│               ├── feature_importance.png          # Landmark importance analysis
+│               ├── learning_curves.png            # Model learning progression
+│               └── metrics.json                   # Summary performance metrics
+├── src/                           # Source code for all implementations
+│   ├── efficientNet/             # Deep learning implementation
+│   │   ├── asl_dataset_info.csv     # ASL dataset metadata
+│   │   ├── unified_data_dataset_info.csv      # Unified dataset metadata
+│   │   ├── efficientnet_transferlearning_finetunning.ipynb  # Interactive training notebook
+│   │   └── efficientnet_transferlearning_finetunning.py     # Training script
+│   ├── randomForest/             # Traditional ML implementation
+│   │   ├── unified_webcam_dataset_info.pickle  # Processed landmark features
+│   │   ├── create_dataset.py     # Landmark extraction and preprocessing
+│   │   └── train_classifier.py   # Random Forest training pipeline
+│   ├── collect_images.py         # Webcam data collection utility
+│   ├── hand_landmarker.task      # MediaPipe configuration for hand detection
+│   └── interact_classifier.py     # Real-time gesture recognition interface
+├── .gitignore                     # Version control exclusions
+├── Readme.md                      # Project overview and setup guide
+├── requirements.txt               # Pip dependencies
+└── requirements.yml              # Conda environment specification
 ```
 
-## Team members
+## Dependencies
 
-- [Doro]()
-- [Fergus]()
-- [Natalia]()
-- [Sergio]()
+- **PyTorch**: Deep learning framework
+- **OpenCV**: Computer vision and image processing
+- **MediaPipe**: Hand landmark detection
+- **Scikit-learn**: Machine learning algorithms
+- **NumPy**: Numerical computing
+- **Pandas**: Data manipulation
 
+## Contributors
 
+- [Doro](link)
+- [Fergus](link)
+- [Natalia](link)
+- [Sergio](link)
+
+## License
+
+MIT License with Academic Citation Requirement.
+
+Copyright (c) 2024 Fergus, Doro, Natalia and Sergio
+
+## Acknowledgments
+
+This project was developed as part of the Computer Vision course at Universidad Carlos III de Madrid under the supervision of [Professor Name].
