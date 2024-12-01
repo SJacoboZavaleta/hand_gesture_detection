@@ -289,9 +289,9 @@ else:
 # Load DataFrame of images previously created
 # Load DataFrame of images previously created
 if DATA_TYPE == 'data2':
-    df = pd.read_csv('asl_dataset_info.csv')
+    df = pd.read_csv('src/efficientNet/asl_dataset_info.csv')
 elif DATA_TYPE == 'data3':
-    df = pd.read_csv('unified_data_dataset_info.csv')
+    df = pd.read_csv('src/efficientNet/unified_data_dataset_info.csv')
 
 print(df.head())
 

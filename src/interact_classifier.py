@@ -377,4 +377,5 @@ if __name__ == "__main__":
     main()
 
 #python src/interact_classifier.py --model_type ml --model_path results/randomforest_data1/evaluation_20241130_132749/checkpoints/random_forest_model.pkl
-#python src/interact_classifier.py --model_type efficientnet --model_path results/efficientnet_v2_s/evaluation_20241129_153938/checkpoints/Fine_Tuning_best_model.pth
+#python src/interact_classifier.py --model_type efficientnet --model_path results/efficientnet_v2_s_data3/evaluation_20241129_153938/checkpoints/Fine_Tuning_best_model.pth
+#python src/interact_classifier.py --model_type efficientnet --model_path results/efficientnet_v2_s_data2/evaluation_20241129_222629/checkpoints/Fine_Tuning_best_model.pth
