@@ -2,8 +2,8 @@
 
 | Label | Network Architecture | Epochs | Batch Size | Learning Methodology | Data |
 |----------|----------|----------|----------|----------|----------|
-| mobilenet_sign_w_user_path_10_ep  | MobileNet  | 10  | 64  | Transfer learning  | unified_dataset, ASL + webcam  |
-| mobilenet_asl_100_percent_5_epoch | MobileNet  | 5  | 64  | Transfer learning  | asl dataset  |
+| asl_only_mobilenet_v2  | MobileNet  | 10  | 64  | Transfer learning  |  asl dataset |
+| mobilenet_asl_100_percent_5_epoch | MobileNet  | 5  | 64  | Transfer learning  |  unified_dataset, ASL + webcam |
 
 
 #TODO update with table from Memoria document
