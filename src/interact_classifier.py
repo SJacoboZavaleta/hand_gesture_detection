@@ -1,157 +1,31 @@
-"""
-Real-Time Hand Gesture Recognition System
-=======================================
-
-This module implements a real-time hand gesture recognition system using computer vision 
-and machine learning techniques. It provides an interactive interface for capturing and 
-classifying hand gestures through a webcam feed.
-
-Project Overview
---------------
-Part of the Computer Vision Master's Project at UC3M (Universidad Carlos III de Madrid)
-Author: [Your Name]
-Date: [Current Date]
-Version: 1.0
-
-Main Features
------------
-* Real-time hand landmark detection using MediaPipe
-* Support for both Random Forest and EfficientNet-based classification
-* Interactive webcam feed with gesture prediction overlay
-* Configurable gesture detection parameters
-* Visual feedback for detected hand landmarks
-* Performance metrics display
-
-Technical Architecture
--------------------
-1. Input Processing:
-   - Webcam feed capture using OpenCV
-   - Hand landmark detection using MediaPipe
-   - Feature extraction and normalization
-
-2. Gesture Classification:
-   - Random Forest classifier for landmark-based detection
-   - EfficientNet deep learning model for image-based detection
-   - Real-time prediction and confidence scoring
-
-3. Visualization:
-   - OpenCV-based GUI
-   - Hand landmark visualization
-   - Prediction confidence display
-   - Performance metrics overlay
-
-Dependencies
------------
-* OpenCV (cv2) >= 4.5.0: Video capture and image processing
-* MediaPipe >= 0.8.9: Hand landmark detection
-* NumPy >= 1.19.0: Numerical computations
-* PyTorch >= 1.9.0: Deep learning model support
-* Pickle: Model serialization
-* tqdm: Progress visualization
-
-Input Requirements
-----------------
-* Webcam access
-* Trained model files:
-    - Random Forest model (.pkl)
-    - EfficientNet model (if using deep learning approach)
-* Consistent lighting conditions
-* Single hand in frame (current version)
-
-Output
-------
-* Real-time visualization window showing:
-    - Processed webcam feed
-    - Detected hand landmarks
-    - Predicted gesture class
-    - Confidence scores
-    - FPS counter
-
-Usage
------
-Run the script directly to start the interactive session:.
-
-
-Key Controls:
-- 'q': Quit the application
-- 'c': Capture current frame
-- 's': Save current frame
-- 'r': Reset metrics
-
-Configuration
-------------
-Adjustable parameters:
-* CONFIDENCE_THRESHOLD: Minimum confidence for valid predictions (0.0 to 1.0)
-* MAX_HANDS: Maximum number of hands to detect (1 for single-hand gestures)
-* MODEL_PATH: Path to the trained classifier model file
-* CAMERA_INDEX: Webcam device index (0 for default)
-* MODEL_TYPE: 'ml' for ML model, 'efficientnet' for EfficientNet model
-
-Performance Considerations
------------------------
-* Recommended minimum specifications:
-    - CPU: Intel i5 or equivalent
-    - RAM: 8GB
-    - Webcam: 720p, 30fps
-* Performance may vary based on:
-    - Lighting conditions
-    - Background complexity
-    - Hand positioning
-    - System resources
-
-Notes
------
-* Current version optimized for single-hand gestures
-* Best results achieved with consistent lighting
-* Model accuracy depends on training data quality
-* Real-time performance may vary by system
-
-References
----------
-1. MediaPipe Hand Landmarker: https://developers.google.com/mediapipe/solutions/vision/hand_landmarker
-2. OpenCV Documentation: https://docs.opencv.org/
-3. [Add relevant papers or resources]
-
-"""
-
 import cv2
 import mediapipe as mp
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
-from pathlib import Path
-import torch
-import torchvision.transforms as transforms
-from PIL import Image
-import torch.nn as nn
-import torchvision.models as models
 import pickle
 import numpy as np
 import argparse
-import json
+import torch
+import torchvision.transforms as transforms
 from pathlib import Path
+from PIL import Image
 
 class HandGestureRecognizer:
     def __init__(self, model_path, model_type, class_lookup):
         """
         Initialize the hand gesture recognizer.
-        
-        Args:
-            model_path: Path to the model file
-            model_type: Type of model ('efficientnet', 'mobilenet', or 'ml')
-            class_lookup: Dictionary mapping indices to class labels
         """
         self.model_type = model_type.lower()
         
-        # MediaPipe hand landmarker setup
-        base_options = python.BaseOptions(model_asset_path='src/hand_landmarker.task')
-        options = vision.HandLandmarkerOptions(
-            base_options=base_options,
-            num_hands=1,
-            min_hand_detection_confidence=0.5,
-            min_hand_presence_confidence=0.5,
-            min_tracking_confidence=0.5
+        # MediaPipe hand configuration 
+        self.mp_hands = mp.solutions.hands
+        self.mp_drawing = mp.solutions.drawing_utils
+        self.mp_drawing_styles = mp.solutions.drawing_styles
+        
+        # Initialize hands detector with more lenient settings
+        self.hands = self.mp_hands.Hands(
+            static_image_mode=False, 
+            min_detection_confidence=0.3,
+            max_num_hands=1
         )
-        self.detector = vision.HandLandmarker.create_from_options(options)
         
         # Setup device
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -159,17 +33,20 @@ class HandGestureRecognizer:
         # Load the appropriate model
         self.model = self._load_model(model_path)
         
+        # Store model path for padding logic
+        self.model_path = str(model_path)
+        
         # Label mapping
         self.labels_dict = class_lookup
         
-        # Setup image transforms based on model type
+        # Setup image transforms
         if self.model_type == 'ml':
             self.transform = None
         else:
+            image_size = (384, 384) if self.model_type == 'efficientnet' else (224, 224)
             self.transform = transforms.Compose([
-                transforms.Resize((384, 384) if model_type == 'efficientnet' else (224, 224)),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                transforms.Resize(image_size),
+                transforms.ToTensor()
             ])
 
     def _load_model(self, model_path):
@@ -178,75 +55,101 @@ class HandGestureRecognizer:
             if self.model_type == 'ml':
                 with open(model_path, 'rb') as f:
                     loaded_data = pickle.load(f)
-                    # If loaded_data is a dictionary, extract the model
-                    if isinstance(loaded_data, dict):
-                        if 'model' in loaded_data:
-                            return loaded_data['model']
-                        else:
-                            raise ValueError("ML model dictionary does not contain 'model' key")
-                    # If it's already a model object, return it directly
-                    return loaded_data
+                    return loaded_data['model'] if isinstance(loaded_data, dict) else loaded_data
             
-            # Para modelos PyTorch
+            # For PyTorch models
             if self.model_type == 'efficientnet':
-                from efficientNet.efficientnet_transferlearning_finetunning import ASLModel
+                from efficientNet.model_class import ASLModel
                 model = ASLModel(num_classes=29)
             elif self.model_type == 'mobilenet':
-                model = MobileNetModel(num_classes=29)
+                from mobileNet.model_class import ASLModel
+                model = ASLModel(num_classes=29)
             else:
-                raise ValueError(f"Tipo de modelo no soportado: {self.model_type}")
+                raise ValueError(f"Unsupported model type: {self.model_type}")
             
-            # Load the saved model weights
             checkpoint = torch.load(model_path, map_location=self.device, weights_only=True)
-            if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
-                model.load_state_dict(checkpoint['model_state_dict'])
-            elif isinstance(checkpoint, dict):
-                model.load_state_dict(checkpoint)
-            
-            # Set the model to evaluation mode for inference
-            model.eval()
-            model.to(self.device)
+            model.load_state_dict(checkpoint['model_state_dict'] if 'model_state_dict' in checkpoint else checkpoint)
+            model.eval().to(self.device)
             return model
             
         except Exception as e:
             print(f"Error loading model: {e}")
             raise
 
-    def _process_landmarks_for_ml(self, landmarks):
-        """Process landmarks for ML model."""
+    def _process_landmarks(self, hand_landmarks, frame_width, frame_height):
+        """Process hand landmarks for ML model."""
+        # [Same implementation as before]
         data_aux = []
         x_ = []
         y_ = []
         
-        for landmark in landmarks:
+        # Collect coordinates
+        for landmark in hand_landmarks.landmark:
             x_.append(landmark.x)
             y_.append(landmark.y)
-            
-        for landmark in landmarks:
+        
+        # Normalize coordinates
+        for landmark in hand_landmarks.landmark:
             data_aux.append(landmark.x - min(x_))
             data_aux.append(landmark.y - min(y_))
-            
-        return np.asarray([data_aux])
+        
+        # Calculate bounding box
+        x1 = int(min(x_) * frame_width) - 10
+        y1 = int(min(y_) * frame_height) - 10
+        x2 = int(max(x_) * frame_width) - 10
+        y2 = int(max(y_) * frame_height) - 10
+        
+        return np.asarray(data_aux), (x1, y1, x2, y2)
 
-    def _process_image(self, frame, bbox):
-        """Process image for deep learning models."""
+    def _process_image_for_dl(self, frame, hand_landmarks):
+        """Process image for deep learning models with dynamic padding."""
         if self.model_type == 'ml':
-            return None  # ML model uses landmarks directly
+            return None
             
         try:
-            x1, y1, x2, y2 = bbox
-            width = x2 - x1
-            height = y2 - y1
-            size_diff = abs(width - height)
+            orig_height, orig_width, _ = frame.shape
+
+            # Collect hand landmark coordinates
+            x_coords = [l.x * orig_width for l in hand_landmarks.landmark]
+            y_coords = [l.y * orig_height for l in hand_landmarks.landmark]
             
-            if width > height:
-                y1 = max(0, y1 - size_diff // 2)
-                y2 = min(frame.shape[0], y2 + size_diff // 2)
+            # Calculate center of the hand
+            x_center = int((min(x_coords) + max(x_coords)) / 2)
+            y_center = int((min(y_coords) + max(y_coords)) / 2)
+            
+            # Hand dimensions
+            hand_width = max(x_coords) - min(x_coords)
+            hand_height = max(y_coords) - min(y_coords)
+            
+            # Check if path contains "data2" for padding strategy
+            if "data2" in self.model_path:
+                # Use 20% padding for data2 models
+                box_size = int(max(hand_width, hand_height) * 1.2)
+                box_size = max(box_size + (box_size % 2), 100)
             else:
-                x1 = max(0, x1 - size_diff // 2)
-                x2 = min(frame.shape[1], x2 + size_diff // 2)
+                # For other models, use a larger crop (80-90% of frame)
+                box_size = int(min(orig_width, orig_height) * 0.8)
             
-            hand_img = frame[y1:y2, x1:x2]
+            # Calculate square bbox coordinates
+            half_size = box_size // 2
+            x_min = max(0, x_center - half_size)
+            x_max = min(orig_width, x_center + half_size)
+            y_min = max(0, y_center - half_size)
+            y_max = min(orig_height, y_center + half_size)
+            
+            # Adjust if box goes out of bounds
+            if x_min == 0:
+                x_max = min(orig_width, box_size)
+            if x_max == orig_width:
+                x_min = max(0, orig_width - box_size)
+            if y_min == 0:
+                y_max = min(orig_height, box_size)
+            if y_max == orig_height:
+                y_min = max(0, orig_height - box_size)
+            
+            # Crop hand region
+            hand_img = frame[int(y_min):int(y_max), int(x_min):int(x_max)]
+            
             if hand_img.size == 0:
                 return None
                 
@@ -256,112 +159,145 @@ class HandGestureRecognizer:
             input_tensor = self.transform(pil_image)
             input_tensor = input_tensor.unsqueeze(0).to(self.device)
             
-            return input_tensor
+            # Return tensor and bbox for potential visualization
+            return input_tensor, (int(x_min), int(y_min), int(x_max), int(y_max))
+        
         except Exception as e:
             print(f"Error processing image: {e}")
             return None
 
     def predict(self, frame):
         """Predict hand gesture from frame."""
+        # Convert frame to RGB for MediaPipe
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
+        H, W, _ = frame.shape
         
-        detection_result = self.detector.detect(mp_image)
+        # Process frame
+        results = self.hands.process(frame_rgb)
         
-        if not detection_result.hand_landmarks:
+        if not results.multi_hand_landmarks:
             return None, None, None, None
-            
-        landmarks = detection_result.hand_landmarks[0]
         
-        h, w, _ = frame.shape
-        x_coords = [landmark.x * w for landmark in landmarks]
-        y_coords = [landmark.y * h for landmark in landmarks]
-        bbox = [
-            max(0, int(min(x_coords)) - 30),
-            max(0, int(min(y_coords)) - 30),
-            min(w, int(max(x_coords)) + 30),
-            min(h, int(max(y_coords)) + 30)
-        ]
+        # Take first hand
+        hand_landmarks = results.multi_hand_landmarks[0]
         
-        if self.model_type == 'ml':
-            input_data = self._process_landmarks_for_ml(landmarks)
-            prediction = self.model.predict(input_data)[0]
-            prediction = int(prediction)
-            confidence = 1.0  # ML models typically don't provide confidence
-        else:
-            input_tensor = self._process_image(frame, bbox)
-            if input_tensor is None:
-                return None, None, None, None
+        # Prepare landmarks for model
+        if len(hand_landmarks.landmark) == 21:
+            if self.model_type == 'ml':
+                # For ML model
+                input_data, bbox = self._process_landmarks(hand_landmarks, W, H)
+                prediction = self.model.predict([input_data])[0]
+                confidence = 1.0  # ML models typically don't provide confidence
+            else:
+                # For deep learning models
+                image_data = self._process_image_for_dl(frame, hand_landmarks)
                 
-            with torch.no_grad():
-                outputs = self.model(input_tensor)
-                probabilities = torch.nn.functional.softmax(outputs, dim=1)
-                confidence, prediction = torch.max(probabilities, 1)
-                prediction = prediction.item()
-                confidence = confidence.item()
+                if image_data is None:
+                    return None, None, None, None
+                
+                input_tensor, bbox = image_data
+                
+                with torch.no_grad():
+                    outputs = self.model(input_tensor)
+                    probabilities = torch.nn.functional.softmax(outputs, dim=1)
+                    confidence, prediction = torch.max(probabilities, 1)
+                    prediction = prediction.item()
+                    confidence = confidence.item()
+            
+            return self.labels_dict[int(prediction)], bbox, hand_landmarks, confidence
         
-        return self.labels_dict[prediction], bbox, landmarks, confidence
+        return None, None, None, None
+
+def get_model_config(option):
+    # Definición de rutas predeterminadas y configuraciones de modelos
+    model_configs = {
+        1: {
+            'model_type': 'ml',
+            'model_path': 'results/randomforest_data1/evaluation_20241130_132749/checkpoints/random_forest_model.pkl'
+        },
+        2: {
+            'model_type': 'efficientnet',
+            'model_path': 'results/efficientnet_v2_s_data2/evaluation_20241206_174129/checkpoints/Fine_Tuning_best_model.pth'
+        },
+        3: {
+            'model_type': 'efficientnet',
+            'model_path': 'results/efficientnet_v2_s_data3/evaluation_20241206_152358/checkpoints/Fine_Tuning_best_model.pth'
+        },
+        4: {
+            'model_type': 'mobilenet',
+            'model_path': 'results/mobilenet_v2_data2/evaluation_20241207_144721/checkpoints/Fine_Tuning_best_model.pth'
+        },
+        5: {
+            'model_type': 'mobilenet',
+            'model_path': 'results/mobilenet_v2_data3/evaluation_20241207_112444/checkpoints/Fine_Tuning_best_model.pth'
+        }
+    }
+    
+    if option not in model_configs:
+        raise ValueError(f"Opción de modelo inválida. Elija entre 1, 2, 3, 4 o 5.")
+    
+    return model_configs[option]
 
 def main():
-    # Configurar argumentos de línea de comandos
+    # Define class lookup
+    class_lookup = {
+        0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 
+        5: "F", 6: "G", 7: "H", 8: "I", 9: "J", 
+        10: "K", 11: "L", 12: "M", 13: "N", 14: "O", 
+        15: "P", 16: "Q", 17: "R", 18: "S", 19: "T", 
+        20: "U", 21: "V", 22: "W", 23: "X", 24: "Y", 
+        25: "Z", 26: "DEL", 27: "NOTHING", 28: "SPACE"
+    }
+
     parser = argparse.ArgumentParser(description='Hand Gesture Recognition')
-    parser.add_argument('--model_type', type=str, required=True,
-                      choices=['efficientnet', 'mobilenet', 'ml'],
-                      help='Tipo de modelo a usar')
-    parser.add_argument('--model_path', type=str, required=True,
-                      help='Ruta al archivo del modelo')
+    parser.add_argument('model_option', type=int, nargs='?', default=1, choices=[1, 2, 3, 4, 5],
+                        help='Opción de modelo: 1-ML, 2-EfficientNet(data3), 3-EfficientNet(custom), 4-MobileNet(data2), 5-MobileNet(data3)')
+    
     args = parser.parse_args()
 
-    # Initialize camera
+    # Obtener la configuración del modelo basada en la opción
+    model_config = get_model_config(args.model_option)
+
+    # Inicializar reconocedor
+    recognizer = HandGestureRecognizer(
+        model_path=Path(model_config['model_path']),
+        model_type=model_config['model_type'],
+        class_lookup=class_lookup
+    )
+    
+    print(f"Using device: {recognizer.device}")
+    print(f"Model type: {model_config['model_type']}")
+    
+    # Open camera
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Error: Could not open camera")
         return
 
-    # Load the appropriate class lookup based on model type
-    if args.model_type == 'efficientnet':
-        class_lookup_path = 'data/classs_lookup_v2.json' #original mapping
-    else:
-        class_lookup_path = 'data/class_lookup.json'
-    
-    # Load class lookup dictionary from JSON file
-    with open(class_lookup_path, 'r') as f:
-        class_lookup = {int(k): v.upper() for k, v in json.load(f).items()}
-
-    # Initialize recognizer
-    recognizer = HandGestureRecognizer(
-        model_path=Path(args.model_path),
-        model_type=args.model_type,
-        class_lookup=class_lookup
-    )
-    
-    print(f"Using device: {recognizer.device}")
-    print(f"Model type: {args.model_type}")
-    
     while True:
         ret, frame = cap.read()
         if not ret:
             break
-            
-        prediction, bbox, landmarks, confidence = recognizer.predict(frame)
         
-        if all(x is not None for x in [prediction, bbox, landmarks, confidence]):
-            cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), 2)
-            
-            for landmark in landmarks:
-                x = int(landmark.x * frame.shape[1])
-                y = int(landmark.y * frame.shape[0])
-                cv2.circle(frame, (x, y), 3, (0, 255, 0), -1)
-            
-            text = f"{prediction} ({confidence:.2f})"
-            cv2.putText(frame, text, (bbox[0], bbox[1] - 10),
-                       cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2,
-                       cv2.LINE_AA)
+        result, bbox, hand_landmarks, confidence = recognizer.predict(frame)
         
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30),
-                   cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2,
-                   cv2.LINE_AA)
+        if result is not None and hand_landmarks is not None:
+            # Draw hand landmarks and connections
+            recognizer.mp_drawing.draw_landmarks(
+                frame, 
+                hand_landmarks, 
+                recognizer.mp_hands.HAND_CONNECTIONS,
+                recognizer.mp_drawing_styles.get_default_hand_landmarks_style(),
+                recognizer.mp_drawing_styles.get_default_hand_connections_style()
+            )
+            
+            # Draw bounding box and prediction text
+            x1, y1, x2, y2 = bbox
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 246, 235), 4)
+            text = f"{result} ({confidence:.2f})"
+            cv2.putText(frame, text, (x1, y1 - 10), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.3, (252, 32, 225), 3,
+                        cv2.LINE_AA)
         
         cv2.imshow('Hand Gesture Recognition', frame)
         
@@ -373,7 +309,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-#python src/interact_classifier.py --model_type ml --model_path results/randomforest_data1/evaluation_20241130_132749/checkpoints/random_forest_model.pkl
-#python src/interact_classifier.py --model_type efficientnet --model_path results/efficientnet_v2_s_data3/evaluation_20241129_153938/checkpoints/Fine_Tuning_best_model.pth
-#python src/interact_classifier.py --model_type efficientnet --model_path results/efficientnet_v2_s_data2/evaluation_20241129_222629/checkpoints/Fine_Tuning_best_model.pth

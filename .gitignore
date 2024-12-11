@@ -34,6 +34,7 @@ backup/
 data/ASL
 data/unified_data
 data/webcam_data
+.gradio
 
 # Generado por Quarto preview
 Readme.html

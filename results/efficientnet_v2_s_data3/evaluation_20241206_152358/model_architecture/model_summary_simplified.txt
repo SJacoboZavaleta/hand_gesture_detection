@@ -1,0 +1,24 @@
+ASL Hand Gesture Classification Model
+====================================
+
+Architecture Overview:
+1. Input Layer: 384×384×3
+2. Backbone: EfficientNetV2-S (pre-trained)
+3. Global Average Pooling
+4. Dense Block 1:
+   - 512 units
+   - Batch Normalization
+   - ReLU Activation
+   - Dropout (0.5)
+5. Dense Block 2:
+   - 256 units
+   - Batch Normalization
+   - ReLU Activation
+   - Dropout (0.3)
+6. Output Layer:
+   - 29 units (classes)
+   - Softmax activation
+
+Training Strategy:
+- Phase 1: Transfer Learning (frozen backbone)
+- Phase 2: Fine-tuning (last 30 layers unfrozen)

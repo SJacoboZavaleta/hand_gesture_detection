@@ -619,7 +619,7 @@ def generate_evaluation_metrics(model, test_loader, history_phase1, history_phas
     test_accuracy = 100 * correct / total
 
     # Load a label mapping
-    label_mapping = load_label_mapping('../data/class_lookup.json')
+    label_mapping = load_label_mapping('../data/class_lookup_v2.json')
 
     # Calculate confusion matrix
     cm = confusion_matrix(all_labels, all_preds)
